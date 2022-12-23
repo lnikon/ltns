@@ -1,17 +1,28 @@
 #include "WebSocketClient.h"
 #include <boost/asio/io_context.hpp>
+#include <thread>
+
+using namespace std::chrono_literals;
 
 int main() {
   boost::asio::io_context ioc{};
-  //auto pWsClient{std::make_shared<WebSocketClient>(ioc)};
-
-  std::shared_ptr<WebSocketClient> pWsClient{new WebSocketClient(ioc)};
 
   std::string host{"ltnm.learncppthroughprojects.com"};
   std::string port{"80"};
   std::string payload{"may the force be with you"};
 
-  pWsClient->Run(host, port, payload);
+  auto pWsClient{std::make_shared<WebSocketClient>(host, port, ioc)};
+
+  pWsClient->Connect(
+      [pWsClient, &payload](auto ec) {
+        if (!ec) {
+          pWsClient->Send(nullptr, payload);
+        }
+      },
+      [](auto ec, auto message) {
+        std::cout << "[onMessage]: message=" << message << std::endl;
+      },
+      nullptr);
 
   ioc.run();
 
