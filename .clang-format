@@ -1,0 +1,14 @@
+Language: Cpp
+IndentWidth: 2
+AlignAfterOpenBracket: AlwaysBreak
+ContinuationIndentWidth: 2
+ColumnLimit: 80
+BinPackArguments: false
+BinPackParameters: false
+IndentCaseLabels: true
+PackConstructorInitializers: Never
+AllowAllArgumentsOnNextLine: false
+ExperimentalAutoDetectBinPacking: false
+AllowAllParametersOfDeclarationOnNextLine: false
+CompactNamespaces: true
+BreakBeforeBraces: Stroustrup
