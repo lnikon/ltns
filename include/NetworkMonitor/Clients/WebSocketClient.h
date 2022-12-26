@@ -1,4 +1,5 @@
-#include <boost/asio/ssl/stream_base.hpp>
+#pragma once
+
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -10,6 +11,7 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/address.hpp>
 #include <boost/asio/ssl.hpp>
+#include <boost/asio/ssl/stream_base.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/beast.hpp>
 #include <boost/beast/core/bind_handler.hpp>
@@ -19,17 +21,18 @@
 #include <boost/beast/core/make_printable.hpp>
 #include <boost/beast/core/stream_traits.hpp>
 #include <boost/beast/core/tcp_stream.hpp>
+#include <boost/beast/ssl.hpp>
 #include <boost/beast/websocket/rfc6455.hpp>
 #include <boost/beast/websocket/stream.hpp>
-#include <boost/beast/ssl.hpp>
 #include <boost/core/ignore_unused.hpp>
 #include <boost/system/detail/error_code.hpp>
 #include <boost/system/error_code.hpp>
 
+namespace Networking::Clients {
+
 using tcp = boost::asio::ip::tcp;
 
 void Log(boost::system::error_code ec);
-
 void LogThisThreadId(const std::string &msg = "");
 
 class WebSocketClient : public std::enable_shared_from_this<WebSocketClient> {
@@ -92,3 +95,5 @@ private:
   OnDisconnectType m_onDisconnect;
   boost::beast::flat_buffer m_buffer;
 };
+
+} // namespace Networking::Clients

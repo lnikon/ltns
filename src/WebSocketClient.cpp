@@ -1,8 +1,11 @@
-#include "WebSocketClient.h"
+#include "Clients/WebSocketClient.h"
+
 #include <boost/asio/ssl/stream_base.hpp>
 #include <boost/beast/core/role.hpp>
 #include <boost/beast/core/stream_traits.hpp>
 #include <openssl/tls1.h>
+
+namespace Networking::Clients {
 
 WebSocketClient::WebSocketClient(
   std::string host,
@@ -182,3 +185,5 @@ void Log(boost::system::error_code ec)
 {
   std::cerr << (ec ? "Error: " : "OK") << (ec ? ec.message() : "") << std::endl;
 }
+
+} // namespace Networking::Clients

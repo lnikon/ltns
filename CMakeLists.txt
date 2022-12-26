@@ -4,13 +4,16 @@ project(LiveTransportNetworkMonitor)
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/conaninfo.txt)
 	list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
+
 find_package(Boost 1.80 REQUIRED COMPONENTS system unit_test_framework)
 find_package(OpenSSL REQUIRED)
+find_package(CURL REQUIRED)
 
 # NetworkMonitor library
 set(
 	NETOWRK_MONITOR_SOURCES
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/WebSocketClient.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/FileDownloader.cpp"
 )
 
 add_library(NetworkMonitor
@@ -23,6 +26,7 @@ target_link_libraries(
 	PUBLIC
 	Boost::system
 	OpenSSL::SSL
+	CURL::libcurl
 )
 
 target_include_directories(
@@ -32,8 +36,7 @@ target_include_directories(
 )
 
 target_compile_definitions(
-	NetworkMonitor
-	PRIVATE
+	NetworkMonitor PRIVATE
 	cxx_std_20
 )
 
@@ -60,6 +63,7 @@ target_compile_definitions(network-monitor-tests
 	cxx_std_20
 	"-DBOOST_TEST_DYN_LINK=1" # TODO: Is there more elegant way to do this? :/
 	TESTS_CACERT_PEM="${CMAKE_CURRENT_SOURCE_DIR}/tests/cacert.pem"
+	TESTS_NETWORK_LAYOUT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/network-layout.json"
 )
 
 target_link_libraries(
@@ -68,4 +72,5 @@ target_link_libraries(
 	NetworkMonitor
 	Boost::unit_test_framework
 	OpenSSL::SSL
+	CURL::libcurl
 )

@@ -1,27 +1,37 @@
-#include <NetworkMonitor/WebSocketClient.h>
+#include <NetworkMonitor/Utilities/FileDownloader.h>
+#include <NetworkMonitor/Clients/WebSocketClient.h>
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl/context.hpp>
 #include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <charconv>
 #include <filesystem>
 #include <string>
 #include <string_view>
-#include <charconv>
+
 using namespace std::string_literals;
 
 BOOST_AUTO_TEST_SUITE(NetworkMonitor);
 
 bool checkInvalidAuthenticationResponse(std::string_view response)
 {
-  bool ok {response.find("ValidationInvalidAuth") != std::string::npos};
+  bool ok{response.find("ValidationInvalidAuth") != std::string::npos};
   return ok;
 }
 
 BOOST_AUTO_TEST_CASE(cacert_pem)
 {
   BOOST_CHECK(std::filesystem::exists(TESTS_CACERT_PEM));
+}
+
+BOOST_AUTO_TEST_CASE(function_DownloadFile)
+{
+  const std::string url{
+    "https://ltnm.learncppthroughprojects.com/network-layout.json"};
+  Networking::Utilities::DownloadFile(url, TESTS_NETWORK_LAYOUT_PATH);
+  BOOST_CHECK(std::filesystem::exists(TESTS_NETWORK_LAYOUT_PATH));
 }
 
 BOOST_AUTO_TEST_CASE(class_WebSocketClient)
@@ -46,8 +56,12 @@ BOOST_AUTO_TEST_CASE(class_WebSocketClient)
   bool disconnected{false};
   std::string response{};
 
-  auto pWsClient{
-    std::make_shared<WebSocketClient>(host, port, endpoint, ioc, ctx)};
+  auto pWsClient{std::make_shared<Networking::Clients::WebSocketClient>(
+    host,
+    port,
+    endpoint,
+    ioc,
+    ctx)};
 
   auto onSend{[&messageSent](auto ec) { messageSent = !ec; }};
 
@@ -60,12 +74,13 @@ BOOST_AUTO_TEST_CASE(class_WebSocketClient)
 
   auto onClose{[&disconnected](auto ec) { disconnected = !ec; }};
 
-  auto onReceive{
-    [&pWsClient, &onClose, &messageReceived, &response](auto ec, auto received) {
-      messageReceived = !ec;
-      response = std::move(received);
-      pWsClient->Disconnect(onClose);
-    }};
+  auto onReceive{[&pWsClient, &onClose, &messageReceived, &response](
+                   auto ec,
+                   auto received) {
+    messageReceived = !ec;
+    response = std::move(received);
+    pWsClient->Disconnect(onClose);
+  }};
 
   pWsClient->Connect(onConnect, onReceive, nullptr);
 
