@@ -5,10 +5,19 @@
 #include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <string>
 #include <filesystem>
+#include <string>
+#include <string_view>
+#include <charconv>
+using namespace std::string_literals;
 
 BOOST_AUTO_TEST_SUITE(NetworkMonitor);
+
+bool checkInvalidAuthenticationResponse(std::string_view response)
+{
+  bool ok {response.find("ValidationInvalidAuth") != std::string::npos};
+  return ok;
+}
 
 BOOST_AUTO_TEST_CASE(cacert_pem)
 {
@@ -22,17 +31,23 @@ BOOST_AUTO_TEST_CASE(class_WebSocketClient)
   boost::asio::io_context ioc{};
 
   std::string host{"ltnm.learncppthroughprojects.com"};
-  std::string endpoint{"/echo"};
+  std::string endpoint{"/network-events"};
   std::string port{"443"};
-  std::string message{"may the force be with you"};
+  std::string message{"STOMP\n"
+                      "accept-version:1.2\n"
+                      "host:ltnm.learncppthroughprojects.com\n"
+                      "login:vagag\n"
+                      "passcode:vagagord\n\n"
+                      "\0"s};
 
   bool connected{false};
   bool messageSent{false};
   bool messageReceived{false};
   bool disconnected{false};
-  std::string echo{};
+  std::string response{};
 
-  auto pWsClient{std::make_shared<WebSocketClient>(host, port, endpoint, ioc, ctx)};
+  auto pWsClient{
+    std::make_shared<WebSocketClient>(host, port, endpoint, ioc, ctx)};
 
   auto onSend{[&messageSent](auto ec) { messageSent = !ec; }};
 
@@ -46,9 +61,9 @@ BOOST_AUTO_TEST_CASE(class_WebSocketClient)
   auto onClose{[&disconnected](auto ec) { disconnected = !ec; }};
 
   auto onReceive{
-    [&pWsClient, &onClose, &messageReceived, &echo](auto ec, auto received) {
+    [&pWsClient, &onClose, &messageReceived, &response](auto ec, auto received) {
       messageReceived = !ec;
-      echo = std::move(received);
+      response = std::move(received);
       pWsClient->Disconnect(onClose);
     }};
 
@@ -60,7 +75,7 @@ BOOST_AUTO_TEST_CASE(class_WebSocketClient)
   BOOST_CHECK(messageSent);
   BOOST_CHECK(messageReceived);
   BOOST_CHECK(disconnected);
-  BOOST_CHECK_EQUAL(message, echo);
+  BOOST_CHECK(checkInvalidAuthenticationResponse(response));
 }
 
 BOOST_AUTO_TEST_SUITE_END();
