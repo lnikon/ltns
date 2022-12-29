@@ -73,6 +73,34 @@ BOOST_AUTO_TEST_CASE(AddLineHappyPath)
 	BOOST_CHECK(*tn.GetRoutesServingStation(st2.m_id)[0] == rt1);
 }
 
+BOOST_AUTO_TEST_CASE(SetAndGetTravelTime)
+{
+  TransportNetwork tn{};
+
+  const LineId lineId{"line_001"};
+  const StationId startStationId{"station_001"};
+  const StationId endStationId{"station_002"};
+  const Station st1(startStationId, "Bagramyan");
+  const Station st2(endStationId, "Yeritasardakan");
+  const Route rt1{
+    .lineId{lineId},
+    .routeId{"route_001"},
+    .direction = RouteDirection::kInbound,
+    .startStationId{startStationId},
+    .endStationId{endStationId},
+    .stops{startStationId, endStationId}};
+	const unsigned int travelTime{10};
+
+  BOOST_CHECK(tn.AddStation(st1));
+  BOOST_CHECK(tn.AddStation(st2));
+
+  BOOST_CHECK(st1 == *tn.GetStation(st1.m_id));
+  BOOST_CHECK(st2 == *tn.GetStation(st2.m_id));
+
+	BOOST_CHECK(tn.SetTravelTime(startStationId, endStationId, travelTime) == true);
+	BOOST_CHECK(tn.GetTravelTime(startStationId, endStationId) == travelTime);
+}
+
 BOOST_AUTO_TEST_CASE(AddLineWithMissingStations)
 {
   TransportNetwork tn{};

@@ -183,4 +183,39 @@ TransportNetwork::GetRoutesServingStation(const StationId &id) const
   return {};
 }
 
+bool TransportNetwork::SetTravelTime(
+  const StationId &start,
+  const StationId &end,
+  const unsigned int travelTime)
+{
+  assert(!start.empty());
+  assert(!end.empty());
+
+  if (start == end) {
+    return false;
+  }
+
+  const auto res{m_travelTimes.insert(TravelTime{
+    .m_startStationId{start},
+    .m_endStationId{end},
+    .m_travelTime = travelTime})};
+
+  return res.second;
+}
+
+unsigned int TransportNetwork::GetTravelTime(
+  const StationId &start,
+  const StationId &end) const
+{
+  assert(!start.empty());
+  assert(!end.empty());
+
+  const auto res{m_travelTimes.find(boost::make_tuple(start, end))};
+  if (res != m_travelTimes.end()) {
+   return res->m_travelTime;
+  }
+
+  return 0;
+}
+
 } // namespace Structures::TransportNetwork

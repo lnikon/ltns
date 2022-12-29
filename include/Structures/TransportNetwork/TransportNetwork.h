@@ -12,6 +12,9 @@
 #include <boost/multi_index/ordered_index_fwd.hpp>
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index_container_fwd.hpp>
+#include <boost/multi_index/key_extractors.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/member.hpp>
 
 namespace Structures::TransportNetwork {
 
@@ -68,17 +71,18 @@ public:
   bool RecordPassengerEvent(const PassengerEvent &event);
   std::size_t GetPassengerCount() const;
 
-  bool operator==(const Station &rhs) const noexcept {
+  bool operator==(const Station &rhs) const noexcept
+  {
     return m_id == rhs.m_id && m_name == rhs.m_name;
   }
 
-	bool AddRoute(std::shared_ptr<Route> pRoute);
-	std::vector<std::shared_ptr<Route>> GetRoutes() const;
+  bool AddRoute(std::shared_ptr<Route> pRoute);
+  std::vector<std::shared_ptr<Route>> GetRoutes() const;
 
 public:
   StationId m_id{};
   StationName m_name{};
-	std::vector<std::shared_ptr<Route>> m_routes{};
+  std::vector<std::shared_ptr<Route>> m_routes{};
 
 private:
   std::size_t m_passengerCount{0};
@@ -98,13 +102,14 @@ struct TravelTime {
   StationId m_endStationId{};
   LineId m_lineId{};
   RouteId m_routeId{};
-  double m_travelTime{};
+  unsigned int m_travelTime{};
 };
 
 using TravelTimes = boost::multi_index_container<
   TravelTime,
   boost::multi_index::indexed_by<
     boost::multi_index::ordered_unique<boost::multi_index::composite_key<
+      TravelTime,
       boost::multi_index::
         member<TravelTime, StationId, &TravelTime::m_startStationId>,
       boost::multi_index::
@@ -129,15 +134,24 @@ public:
   std::shared_ptr<Line> GetLine(LineId lineId) const;
 
   bool RecordPassengerEvent(const PassengerEvent &event);
-  std::size_t GetPassengerCount(const StationId& stationId) const;
+  std::size_t GetPassengerCount(const StationId &stationId) const;
 
-  std::vector<std::shared_ptr<Route>> GetRoutesServingStation(const StationId& id) const;
+  std::vector<std::shared_ptr<Route>>
+  GetRoutesServingStation(const StationId &id) const;
+
+  bool SetTravelTime(
+    const StationId &start,
+    const StationId &end,
+    const unsigned int travelTime);
+
+  unsigned int
+  GetTravelTime(const StationId &start, const StationId &end) const;
 
 private:
   std::unordered_map<LineId, std::shared_ptr<Line>> m_lines{};
   std::unordered_map<StationId, std::shared_ptr<Station>> m_stations{};
   std::unordered_map<StationId, std::size_t> m_passengerEvents{};
-  TravelTimes m_travelTimes;
+  TravelTimes m_travelTimes{};
 };
 
 } // namespace Structures::TransportNetwork
