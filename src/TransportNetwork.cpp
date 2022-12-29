@@ -1,6 +1,7 @@
 #include <TransportNetwork/TransportNetwork.h>
 
 #include <bits/ranges_algobase.h>
+#include <bits/ranges_util.h>
 #include <memory>
 #include <numbers>
 #include <ranges>
@@ -47,6 +48,26 @@ bool Station::RecordPassengerEvent(const PassengerEvent &event)
 
 std::size_t Station::GetPassengerCount() const { return m_passengerCount; }
 
+bool Station::AddRoute(std::shared_ptr<Route> pRoute)
+{
+  assert(pRoute);
+
+  if (auto it{std::ranges::find_if(
+        m_routes,
+        [pRoute](auto existingRoute) { return *pRoute == *existingRoute; })};
+      it != m_routes.end()) {
+    return false;
+  }
+
+  m_routes.emplace_back(std::move(pRoute));
+  return true;
+}
+
+std::vector<std::shared_ptr<Route>> Station::GetRoutes() const
+{
+  return m_routes;
+}
+
 bool Line::operator==(const Line &line) const
 {
   const bool ok = id == line.id && name == line.name && routes == line.routes;
@@ -84,9 +105,10 @@ bool TransportNetwork::AddLine(Line line)
       "(TransportNetwork::AddLine): Line with empty routes are not supported!");
   }
 
+  // TODO: Move into function.
   // When inserting the line, network should already contain all its stations.
   for (const auto &route : line.routes) {
-    for (const auto &stationId : route.stops) {
+    for (const auto &stationId : route->stops) {
       if (!GetStation(stationId)) {
         throw std::logic_error(
           "(TransportNetwork::AddLine): Network contains no station=" +
@@ -95,12 +117,11 @@ bool TransportNetwork::AddLine(Line line)
     }
   }
 
-  // Check that routes are in correct order.
-  for (std::size_t current{0}, next{1}; next < line.routes.size();
-       current = next, ++next) {
-    if (line.routes[current].endStationId != line.routes[next].startStationId) {
-      throw std::logic_error(
-        "(TransportNetwork::AddLine): Network line contains a gap!");
+  // TODO: Move into function.
+  for (const auto &route : line.routes) {
+    for (const auto &stationId : route->stops) {
+      auto pStation{GetStation(stationId)};
+      pStation->AddRoute(route);
     }
   }
 
@@ -147,6 +168,19 @@ TransportNetwork::GetPassengerCount(const StationId &stationId) const
   }
 
   return 0;
+}
+
+std::vector<std::shared_ptr<Route>>
+TransportNetwork::GetRoutesServingStation(const StationId &id) const
+{
+  assert(!id.empty());
+
+  const auto pStation{GetStation(id)};
+  if (pStation) {
+    return pStation->GetRoutes();
+  }
+
+  return {};
 }
 
 } // namespace Structures::TransportNetwork

@@ -72,9 +72,13 @@ public:
     return m_id == rhs.m_id && m_name == rhs.m_name;
   }
 
+	bool AddRoute(std::shared_ptr<Route> pRoute);
+	std::vector<std::shared_ptr<Route>> GetRoutes() const;
+
 public:
   StationId m_id{};
   StationName m_name{};
+	std::vector<std::shared_ptr<Route>> m_routes{};
 
 private:
   std::size_t m_passengerCount{0};
@@ -83,7 +87,7 @@ private:
 struct Line {
   LineId id{};
   std::string name{};
-  std::vector<Route> routes{};
+  std::vector<std::shared_ptr<Route>> routes{};
 
   bool operator==(const Line &line) const;
   bool operator!=(const Line &line) const;
@@ -126,6 +130,8 @@ public:
 
   bool RecordPassengerEvent(const PassengerEvent &event);
   std::size_t GetPassengerCount(const StationId& stationId) const;
+
+  std::vector<std::shared_ptr<Route>> GetRoutesServingStation(const StationId& id) const;
 
 private:
   std::unordered_map<LineId, std::shared_ptr<Line>> m_lines{};

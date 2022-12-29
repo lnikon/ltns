@@ -11,12 +11,7 @@ using namespace Structures::TransportNetwork;
 
 BOOST_AUTO_TEST_SUITE(TransportNetworkTestSuite);
 
-BOOST_AUTO_TEST_CASE(class_TransportNetwork_Constructor1)
-{
-  TransportNetwork tn{};
-}
-
-BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddStationAndGetIt)
+BOOST_AUTO_TEST_CASE(AddStationAndGetIt)
 {
   TransportNetwork tn{};
   const Station st1("station_001", "Bagramyan");
@@ -25,7 +20,7 @@ BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddStationAndGetIt)
   BOOST_CHECK(st1 == *tn.GetStation(st1.m_id));
 }
 
-BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddDuplicateStation)
+BOOST_AUTO_TEST_CASE(AddDuplicateStation)
 {
   TransportNetwork tn{};
 
@@ -40,7 +35,7 @@ BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddDuplicateStation)
   BOOST_CHECK(st2 != *tn.GetStation(st1.m_id));
 }
 
-BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddLineHappyPath)
+BOOST_AUTO_TEST_CASE(AddLineHappyPath)
 {
   TransportNetwork tn{};
 
@@ -56,18 +51,29 @@ BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddLineHappyPath)
     .startStationId{startStationId},
     .endStationId{endStationId},
     .stops{startStationId, endStationId}};
-  const Line ln1{.id{lineId}, .name{"bagyer"}, .routes{rt1}};
+  const Line ln1{
+    .id{lineId},
+    .name{"bagyer"},
+    .routes{std::make_shared<Route>(rt1)}};
 
   BOOST_CHECK(tn.AddStation(st1));
   BOOST_CHECK(tn.AddStation(st2));
 
   BOOST_CHECK(st1 == *tn.GetStation(st1.m_id));
   BOOST_CHECK(st2 == *tn.GetStation(st2.m_id));
+
   BOOST_CHECK_NO_THROW(tn.AddLine(ln1));
+  BOOST_CHECK(tn.GetLine(lineId) != nullptr);
   BOOST_CHECK(ln1 == *tn.GetLine(lineId));
+
+	BOOST_CHECK(!tn.GetRoutesServingStation(st1.m_id).empty());
+	BOOST_CHECK(*tn.GetRoutesServingStation(st1.m_id)[0] == rt1);
+
+	BOOST_CHECK(!tn.GetRoutesServingStation(st2.m_id).empty());
+	BOOST_CHECK(*tn.GetRoutesServingStation(st2.m_id)[0] == rt1);
 }
 
-BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddLineWithMissingStations)
+BOOST_AUTO_TEST_CASE(AddLineWithMissingStations)
 {
   TransportNetwork tn{};
 
@@ -83,7 +89,10 @@ BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddLineWithMissingStations)
     .startStationId{startStationId},
     .endStationId{endStationId},
     .stops{startStationId, endStationId}};
-  const Line ln1{.id{lineId}, .name{"bagyer"}, .routes{rt1}};
+  const Line ln1{
+    .id{lineId},
+    .name{"bagyer"},
+    .routes{std::make_shared<Route>(rt1)}};
 
   BOOST_CHECK(tn.AddStation(st1));
 
@@ -93,7 +102,7 @@ BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddLineWithMissingStations)
   BOOST_CHECK(tn.GetLine(lineId) == nullptr);
 }
 
-BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddLineWithMultipleRoutes)
+BOOST_AUTO_TEST_CASE(AddLineWithMultipleRoutes)
 {
   TransportNetwork tn{};
 
@@ -137,7 +146,14 @@ BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddLineWithMultipleRoutes)
     .endStationId{endStationId},
     .stops{immStationId3, endStationId}};
 
-  const Line ln1{.id{lineId}, .name{"bagyer"}, .routes{rt1, rt2, rt3, rt4}};
+  const Line ln1{
+    .id{lineId},
+    .name{"bagyer"},
+    .routes{
+      std::make_shared<Route>(rt1),
+      std::make_shared<Route>(rt2),
+      std::make_shared<Route>(rt3),
+      std::make_shared<Route>(rt4)}};
 
   BOOST_CHECK(tn.AddStation(startSt));
   BOOST_CHECK(tn.AddStation(immSt1));
@@ -149,7 +165,7 @@ BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddLineWithMultipleRoutes)
   BOOST_CHECK(ln1 == *tn.GetLine(lineId));
 }
 
-BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddLineWithGap)
+BOOST_AUTO_TEST_CASE(AddLineWithGap)
 {
   TransportNetwork tn{};
 
@@ -194,7 +210,13 @@ BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddLineWithGap)
     .endStationId{endStationId},
     .stops{immStationId3, endStationId}};
 
-  const Line ln1{.id{lineId}, .name{"bagyer"}, .routes{rt1, rt2, rt4}};
+  const Line ln1{
+    .id{lineId},
+    .name{"bagyer"},
+    .routes{
+      std::make_shared<Route>(rt1),
+      std::make_shared<Route>(rt2),
+      std::make_shared<Route>(rt4)}};
 
   BOOST_CHECK(tn.AddStation(startSt));
   BOOST_CHECK(tn.AddStation(immSt1));
@@ -202,11 +224,12 @@ BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddLineWithGap)
   BOOST_CHECK(tn.AddStation(immSt3));
   BOOST_CHECK(tn.AddStation(endSt));
 
-  BOOST_CHECK_THROW(tn.AddLine(ln1), std::logic_error);
-  BOOST_CHECK(tn.GetLine(lineId) == nullptr);
+  BOOST_CHECK_NO_THROW(tn.AddLine(ln1));
+  BOOST_CHECK(tn.GetLine(lineId) != nullptr);
+  BOOST_CHECK(*tn.GetLine(lineId) == ln1);
 }
 
-BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddLineWithEmptyRoutes)
+BOOST_AUTO_TEST_CASE(AddLineWithEmptyRoutes)
 {
   const LineId lineId{"empty_line"};
   TransportNetwork tn{};
@@ -216,8 +239,7 @@ BOOST_AUTO_TEST_CASE(class_TransportNetwork_AddLineWithEmptyRoutes)
   BOOST_CHECK(tn.GetLine(lineId) == nullptr);
 }
 
-BOOST_AUTO_TEST_CASE(
-  class_TransportNetwork_RecordPassengerEventForExistingStation)
+BOOST_AUTO_TEST_CASE(RecordPassengerEventForExistingStation)
 {
   TransportNetwork tn{};
 
@@ -233,7 +255,10 @@ BOOST_AUTO_TEST_CASE(
     .startStationId{startStationId},
     .endStationId{endStationId},
     .stops{startStationId, endStationId}};
-  const Line ln1{.id{lineId}, .name{"bagyer"}, .routes{rt1}};
+  const Line ln1{
+    .id{lineId},
+    .name{"bagyer"},
+    .routes{std::make_shared<Route>(rt1)}};
   PassengerEvent event{
     .m_stationId{startStationId},
     .m_type = PassengerEvent::Type::kIn};
@@ -267,8 +292,7 @@ BOOST_AUTO_TEST_CASE(
   BOOST_CHECK_EQUAL(tn.GetPassengerCount(endStationId), 2);
 }
 
-BOOST_AUTO_TEST_CASE(
-  class_TransportNetwork_RecordOutPassengerEventForEmptyStation)
+BOOST_AUTO_TEST_CASE(RecordOutPassengerEventForEmptyStation)
 {
   TransportNetwork tn{};
 
@@ -284,7 +308,10 @@ BOOST_AUTO_TEST_CASE(
     .startStationId{startStationId},
     .endStationId{endStationId},
     .stops{startStationId, endStationId}};
-  const Line ln1{.id{lineId}, .name{"bagyer"}, .routes{rt1}};
+  const Line ln1{
+    .id{lineId},
+    .name{"bagyer"},
+    .routes{std::make_shared<Route>(rt1)}};
   PassengerEvent event{
     .m_stationId{startStationId},
     .m_type = PassengerEvent::Type::kOut};
@@ -295,8 +322,7 @@ BOOST_AUTO_TEST_CASE(
   BOOST_CHECK_EQUAL(tn.GetPassengerCount(startStationId), 0);
 }
 
-BOOST_AUTO_TEST_CASE(
-  class_TransportNetwork_RecordPassengerEventForNonExistingStation)
+BOOST_AUTO_TEST_CASE(RecordPassengerEventForNonExistingStation)
 {
   TransportNetwork tn{};
 
@@ -312,7 +338,10 @@ BOOST_AUTO_TEST_CASE(
     .startStationId{startStationId},
     .endStationId{endStationId},
     .stops{startStationId, endStationId}};
-  const Line ln1{.id{lineId}, .name{"bagyer"}, .routes{rt1}};
+  const Line ln1{
+    .id{lineId},
+    .name{"bagyer"},
+    .routes{std::make_shared<Route>(rt1)}};
   const PassengerEvent event{
     .m_stationId{startStationId},
     .m_type = PassengerEvent::Type::kIn};
@@ -322,9 +351,11 @@ BOOST_AUTO_TEST_CASE(
   BOOST_CHECK(!tn.RecordPassengerEvent(event));
   BOOST_CHECK_EQUAL(tn.GetPassengerCount(startStationId), 0);
   BOOST_CHECK_EQUAL(tn.GetPassengerCount(endStationId), 0);
+  BOOST_CHECK(tn.GetRoutesServingStation(startStationId).empty());
+  BOOST_CHECK(tn.GetRoutesServingStation(endStationId).empty());
 }
 
-BOOST_AUTO_TEST_CASE(class_TransportNetwork_RecordPassengerEventWithWrongType)
+BOOST_AUTO_TEST_CASE(RecordPassengerEventWithWrongType)
 {
   TransportNetwork tn{};
 
@@ -340,7 +371,10 @@ BOOST_AUTO_TEST_CASE(class_TransportNetwork_RecordPassengerEventWithWrongType)
     .startStationId{startStationId},
     .endStationId{endStationId},
     .stops{startStationId, endStationId}};
-  const Line ln1{.id{lineId}, .name{"bagyer"}, .routes{rt1}};
+  const Line ln1{
+    .id{lineId},
+    .name{"bagyer"},
+    .routes{std::make_shared<Route>(rt1)}};
   const PassengerEvent event{
     .m_stationId{startStationId},
     .m_type = PassengerEvent::Type::kSizeOfEnum};
