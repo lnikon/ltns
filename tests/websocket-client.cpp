@@ -1,5 +1,5 @@
-#include <NetworkMonitor/Utilities/FileDownloader.h>
 #include <NetworkMonitor/Clients/WebSocketClient.h>
+#include <NetworkMonitor/Utilities/FileDownloader.h>
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl/context.hpp>
@@ -30,7 +30,10 @@ BOOST_AUTO_TEST_CASE(function_DownloadFile)
 {
   const std::string url{
     "https://ltnm.learncppthroughprojects.com/network-layout.json"};
-  Networking::Utilities::DownloadFile(url, TESTS_NETWORK_LAYOUT_PATH);
+  Networking::Utilities::DownloadFile(
+    Networking::Utilities::FileDownloadOptions{
+      .url{url},
+      .destinationPath{TESTS_NETWORK_LAYOUT_PATH}});
   BOOST_CHECK(std::filesystem::exists(TESTS_NETWORK_LAYOUT_PATH));
 }
 

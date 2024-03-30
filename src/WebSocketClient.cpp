@@ -15,9 +15,9 @@ WebSocketClient::WebSocketClient(
   boost::asio::ssl::context &ctx)
     : m_ioc(ioc),
       m_ctx(ctx),
-      m_host(host),
-      m_port(port),
-      m_endpoint(endpoint),
+      m_host(std::move(host)),
+      m_port(std::move(port)),
+      m_endpoint(std::move(endpoint)),
       m_resolver(boost::asio::make_strand(m_ioc)),
       m_ws(boost::asio::make_strand(m_ioc), ctx)
 {
@@ -28,15 +28,15 @@ void WebSocketClient::Connect(
   OnMessageType onMessage,
   OnDisconnectType onDisconnect)
 {
-  m_onConnect = onConnect;
-  m_onMessage = onMessage;
-  m_onDisconnect = onDisconnect;
+  m_onConnect = std::move(onConnect);
+  m_onMessage = std::move(onMessage);
+  m_onDisconnect = std::move(onDisconnect);
 
   m_resolver.async_resolve(
     m_host,
     m_port,
     [this](boost::beast::error_code ec, tcp::resolver::results_type results) {
-      onResolve(ec, results);
+      onResolve(ec, std::move(results));
     });
 }
 

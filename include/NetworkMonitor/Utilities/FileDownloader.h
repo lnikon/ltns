@@ -1,8 +1,8 @@
 #pragma once
 
 #include <netdb.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <unistd.h>
 
@@ -11,11 +11,14 @@
 
 namespace Networking::Utilities {
 
-size_t writeData(void *ptr, std::size_t size, std::size_t nmemb, void *stream);
+struct FileDownloadOptions {
+	 std::string url;
+   std::string destinationPath;
+   std::string certificatePath;
+};
 
-void DownloadFile(
-  const std::string &url,
-  const std::string &destinationPath,
-  const std::string &certificatePath = "");
+auto writeData(void *ptr, std::size_t size, std::size_t nmemb, void *stream) -> size_t;
+
+void DownloadFile(const FileDownloadOptions& options);
 
 } // namespace Networking::Utilities

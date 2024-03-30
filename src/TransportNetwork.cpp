@@ -9,7 +9,7 @@
 
 namespace Structures::TransportNetwork {
 
-bool Route::operator==(const Route &other) const
+auto Route::operator==(const Route &other) const -> bool
 {
   return lineId == other.lineId && routeId == other.routeId &&
          direction == other.direction &&
@@ -17,7 +17,10 @@ bool Route::operator==(const Route &other) const
          endStationId == other.endStationId && stops == other.stops;
 }
 
-bool Route::operator!=(const Route &other) const { return !(*this == other); }
+auto Route::operator!=(const Route &other) const -> bool
+{
+  return !(*this == other);
+}
 
 Station::Station(StationId id, StationName name, std::size_t passengerCount)
     : m_id(std::move(id)),
@@ -26,7 +29,7 @@ Station::Station(StationId id, StationName name, std::size_t passengerCount)
 {
 }
 
-bool Station::RecordPassengerEvent(const PassengerEvent &event)
+auto Station::RecordPassengerEvent(const PassengerEvent &event) -> bool
 {
   switch (event.m_type) {
     case PassengerEvent::Type::kIn:
@@ -46,16 +49,19 @@ bool Station::RecordPassengerEvent(const PassengerEvent &event)
   return true;
 }
 
-std::size_t Station::GetPassengerCount() const { return m_passengerCount; }
+auto Station::GetPassengerCount() const -> std::size_t
+{
+  return m_passengerCount;
+}
 
-bool Station::AddRoute(std::shared_ptr<Route> pRoute)
+auto Station::AddRoute(std::shared_ptr<Route> pRoute) -> bool
 {
   assert(pRoute);
 
-  if (auto it{std::ranges::find_if(
+  if (const auto cit{std::ranges::find_if(
         m_routes,
         [pRoute](auto existingRoute) { return *pRoute == *existingRoute; })};
-      it != m_routes.end()) {
+      cit != m_routes.end()) {
     return false;
   }
 
@@ -63,38 +69,41 @@ bool Station::AddRoute(std::shared_ptr<Route> pRoute)
   return true;
 }
 
-std::vector<std::shared_ptr<Route>> Station::GetRoutes() const
+auto Station::GetRoutes() const -> std::vector<std::shared_ptr<Route>>
 {
   return m_routes;
 }
 
-bool Line::operator==(const Line &line) const
+auto Line::operator==(const Line &line) const -> bool
 {
-  const bool ok = id == line.id && name == line.name && routes == line.routes;
-  return ok;
+  return id == line.id && name == line.name && routes == line.routes;
 }
 
-bool Line::operator!=(const Line &line) const { return !(*this == line); }
+auto Line::operator!=(const Line &line) const -> bool
+{
+  return !(*this == line);
+}
 
-bool TransportNetwork::AddStation(Station station)
+auto TransportNetwork::AddStation(Station station) -> bool
 {
   assert(!station.m_id.empty());
   assert(!station.m_name.empty());
 
-  auto id{station.m_id};
+  auto stationId{station.m_id};
   auto res{m_stations.emplace(
-    std::move(id),
+    std::move(stationId),
     std::make_shared<Station>(std::move(station)))};
 
   return res.second;
 }
 
-std::shared_ptr<Station> TransportNetwork::GetStation(StationId id) const
+auto TransportNetwork::GetStation(const StationId &stationId) const
+  -> std::shared_ptr<Station>
 {
-  assert(!id.empty());
+  assert(!stationId.empty());
 
-  auto it = m_stations.find(id);
-  return (it != m_stations.end() ? it->second : nullptr);
+  const auto cit = m_stations.find(stationId);
+  return (cit != m_stations.end() ? cit->second : nullptr);
 }
 
 bool TransportNetwork::AddLine(Line line)
@@ -126,22 +135,23 @@ bool TransportNetwork::AddLine(Line line)
   }
 
   auto lineId{line.id};
-  auto res{m_lines.emplace(
+  const auto res{m_lines.emplace(
     std::move(lineId),
     std::make_shared<Line>(std::move(line)))};
 
   return res.second;
 }
 
-std::shared_ptr<Line> TransportNetwork::GetLine(LineId lineId) const
+auto TransportNetwork::GetLine(const LineId &lineId) const
+  -> std::shared_ptr<Line>
 {
   assert(!lineId.empty());
 
-  auto it = m_lines.find(lineId);
-  return (it != m_lines.end() ? it->second : nullptr);
+  const auto cit{m_lines.find(lineId)};
+  return (cit != m_lines.end() ? cit->second : nullptr);
 }
 
-bool TransportNetwork::RecordPassengerEvent(const PassengerEvent &event)
+auto TransportNetwork::RecordPassengerEvent(const PassengerEvent &event) const -> bool
 {
   assert(!event.m_stationId.empty());
   // TODO: Maybe throw exception instead of assert?
@@ -157,8 +167,8 @@ bool TransportNetwork::RecordPassengerEvent(const PassengerEvent &event)
   return false;
 }
 
-std::size_t
-TransportNetwork::GetPassengerCount(const StationId &stationId) const
+auto
+TransportNetwork::GetPassengerCount(const StationId &stationId) const -> std::size_t
 {
   assert(!stationId.empty());
 
@@ -170,12 +180,12 @@ TransportNetwork::GetPassengerCount(const StationId &stationId) const
   return 0;
 }
 
-std::vector<std::shared_ptr<Route>>
-TransportNetwork::GetRoutesServingStation(const StationId &id) const
+auto
+TransportNetwork::GetRoutesServingStation(const StationId &stationId) const -> std::vector<std::shared_ptr<Route>>
 {
-  assert(!id.empty());
+  assert(!stationId.empty());
 
-  const auto pStation{GetStation(id)};
+  const auto pStation{GetStation(stationId)};
   if (pStation) {
     return pStation->GetRoutes();
   }
@@ -183,10 +193,10 @@ TransportNetwork::GetRoutesServingStation(const StationId &id) const
   return {};
 }
 
-bool TransportNetwork::SetTravelTime(
+auto TransportNetwork::SetTravelTime(
   const StationId &start,
   const StationId &end,
-  const unsigned int travelTime)
+  const unsigned int travelTime) -> bool
 {
   assert(!start.empty());
   assert(!end.empty());
@@ -203,19 +213,23 @@ bool TransportNetwork::SetTravelTime(
   return res.second;
 }
 
-unsigned int TransportNetwork::GetTravelTime(
+auto TransportNetwork::GetTravelTime(
   const StationId &start,
-  const StationId &end) const
+  const StationId &end) const -> unsigned int
 {
   assert(!start.empty());
   assert(!end.empty());
 
   const auto res{m_travelTimes.find(boost::make_tuple(start, end))};
   if (res != m_travelTimes.end()) {
-   return res->m_travelTime;
+    return res->m_travelTime;
   }
 
   return 0;
 }
 
+auto Station::operator==(const Station &rhs) const noexcept -> bool
+{
+  return m_id == rhs.m_id && m_name == rhs.m_name;
+}
 } // namespace Structures::TransportNetwork

@@ -6,15 +6,14 @@
 #include <vector>
 
 #include <boost/multi_index/composite_key.hpp>
+#include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/indexed_by.hpp>
+#include <boost/multi_index/key_extractors.hpp>
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/ordered_index_fwd.hpp>
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index_container_fwd.hpp>
-#include <boost/multi_index/key_extractors.hpp>
-#include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/member.hpp>
 
 namespace Structures::TransportNetwork {
 
@@ -50,36 +49,32 @@ struct Route {
   StationId endStationId{};
   std::vector<StationId> stops{};
 
-  bool operator==(const Route &other) const;
-  bool operator!=(const Route &other) const;
+  auto operator==(const Route &other) const -> bool;
+  auto operator!=(const Route &other) const -> bool;
 };
 
 class Station {
 public:
-  Station(StationId id, StationName name, std::size_t passengerCount = 0);
+  Station(StationId stationId, StationName name, std::size_t passengerCount = 0);
 
   Station() = default;
 
   Station(const Station &) = default;
-  Station &operator=(const Station &) = default;
+  auto operator=(const Station &) -> Station & = default;
 
   Station(Station &&) = default;
-  Station &operator=(Station &&) = default;
+  auto operator=(Station &&) -> Station & = default;
 
   ~Station() = default;
 
-  bool RecordPassengerEvent(const PassengerEvent &event);
-  std::size_t GetPassengerCount() const;
+  auto RecordPassengerEvent(const PassengerEvent &event) -> bool;
+  [[nodiscard]] auto GetPassengerCount() const -> std::size_t;
 
-  bool operator==(const Station &rhs) const noexcept
-  {
-    return m_id == rhs.m_id && m_name == rhs.m_name;
-  }
+  auto operator==(const Station &rhs) const noexcept -> bool;
 
-  bool AddRoute(std::shared_ptr<Route> pRoute);
-  std::vector<std::shared_ptr<Route>> GetRoutes() const;
+  auto AddRoute(std::shared_ptr<Route> pRoute) -> bool;
+  [[nodiscard]] auto GetRoutes() const -> std::vector<std::shared_ptr<Route>>;
 
-public:
   StationId m_id{};
   StationName m_name{};
   std::vector<std::shared_ptr<Route>> m_routes{};
@@ -93,8 +88,8 @@ struct Line {
   std::string name{};
   std::vector<std::shared_ptr<Route>> routes{};
 
-  bool operator==(const Line &line) const;
-  bool operator!=(const Line &line) const;
+  auto operator==(const Line &line) const -> bool;
+  auto operator!=(const Line &line) const -> bool;
 };
 
 struct TravelTime {
@@ -122,30 +117,30 @@ public:
   TransportNetwork(const TransportNetwork &) = default;
   TransportNetwork(TransportNetwork &&) = default;
 
-  TransportNetwork &operator=(const TransportNetwork &) = default;
-  TransportNetwork &operator=(TransportNetwork &&) = default;
+  auto operator=(const TransportNetwork &) -> TransportNetwork & = default;
+  auto operator=(TransportNetwork &&) -> TransportNetwork & = default;
 
   ~TransportNetwork() = default;
 
-  bool AddStation(Station station);
-  std::shared_ptr<Station> GetStation(StationId id) const;
+  auto AddStation(Station station) -> bool;
+  auto GetStation(const StationId& stationId) const -> std::shared_ptr<Station>;
 
-  bool AddLine(Line line);
-  std::shared_ptr<Line> GetLine(LineId lineId) const;
+  auto AddLine(Line line) -> bool;
+  auto GetLine(const LineId& lineId) const -> std::shared_ptr<Line>;
 
-  bool RecordPassengerEvent(const PassengerEvent &event);
-  std::size_t GetPassengerCount(const StationId &stationId) const;
+  auto RecordPassengerEvent(const PassengerEvent &event) const -> bool;
+  auto GetPassengerCount(const StationId &stationId) const -> std::size_t;
 
-  std::vector<std::shared_ptr<Route>>
-  GetRoutesServingStation(const StationId &id) const;
+  auto
+  GetRoutesServingStation(const StationId &stationId) const -> std::vector<std::shared_ptr<Route>>;
 
-  bool SetTravelTime(
+  auto SetTravelTime(
     const StationId &start,
     const StationId &end,
-    const unsigned int travelTime);
+    unsigned int travelTime) -> bool;
 
-  unsigned int
-  GetTravelTime(const StationId &start, const StationId &end) const;
+  auto
+  GetTravelTime(const StationId &start, const StationId &end) const -> unsigned int;
 
 private:
   std::unordered_map<LineId, std::shared_ptr<Line>> m_lines{};

@@ -53,8 +53,8 @@ public:
   WebSocketClient(const WebSocketClient &) = delete;
   WebSocketClient(WebSocketClient &&) = delete;
 
-  WebSocketClient &operator=(const WebSocketClient &) = delete;
-  WebSocketClient &operator=(WebSocketClient &&) = delete;
+  auto operator=(const WebSocketClient &) -> WebSocketClient & = delete;
+  auto operator=(WebSocketClient &&) -> WebSocketClient & = delete;
 
   ~WebSocketClient() = default;
 
@@ -79,7 +79,6 @@ private:
   void listenForIncomingMessages(boost::beast::error_code ec);
   void onRead(boost::beast::error_code ec, std::size_t nBytes);
 
-private:
   boost::asio::io_context &m_ioc;
   boost::asio::ssl::context &m_ctx;
   std::string m_host;

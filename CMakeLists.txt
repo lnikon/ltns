@@ -9,8 +9,16 @@ find_package(Boost 1.80 REQUIRED COMPONENTS system unit_test_framework)
 find_package(OpenSSL REQUIRED)
 find_package(CURL REQUIRED)
 
+# TODO: Find better way for this
 add_compile_options(-fsanitize=address -O0 -g -std=c++20)
 add_link_options(-fsanitize=address)
+
+## Setup clang-tidy
+#set(CMAKE_CXX_CLANG_TIDY
+#  clang-tidy;
+#  -format-style='file';
+#  -header-filter=${CMAKE_CURRENT_SOURCE_DIR};
+#)
 
 # Structures library
 set(
@@ -139,6 +147,41 @@ target_compile_definitions(
 
 target_link_libraries(
 	transport-network-tests
+	PRIVATE
+	Structures
+	Boost::unit_test_framework
+	OpenSSL::SSL
+	CURL::libcurl
+)
+
+# StompParser unit tests
+set(
+	STOMP_PARSER_TEST_SOURCES
+	"${CMAKE_CURRENT_SOURCE_DIR}/tests/main.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/tests/stomp-parser.cpp"
+)
+
+add_executable(
+	stomp-parser-tests
+	${STOMP_PARSER_TEST_SOURCES}
+)
+
+target_include_directories(
+	stomp-parser-tests
+	PRIVATE 
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+)
+
+target_compile_definitions(
+	stomp-parser-tests
+	PRIVATE
+	cxx_std_20
+	"-DBOOST_TEST_DYN_LINK=1" # TODO: Is there more elegant way to do this? :/
+	TESTS_NETWORK_LAYOUT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/network-layout.json"
+)
+
+target_link_libraries(
+	stomp-parser-tests
 	PRIVATE
 	Structures
 	Boost::unit_test_framework
